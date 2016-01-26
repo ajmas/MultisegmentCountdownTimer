@@ -1,0 +1,158 @@
+<html>
+<head>
+
+    <style type="text/css">
+    
+       #countdown-box {
+           width: 300px;
+           text-align: center;
+           display: block;
+       }
+       
+       #countdown {
+           margin: 0 auto;    
+           display: block
+           text-align: center;
+           width: 200px;
+       }
+       
+       .countDownDigit {
+           display: inline-block;
+           width: 20px; 
+           height: 30px;
+           color: white; 
+           background: black;
+           text-align: center;
+           font-family: sans-serif;
+           border-radius: 5px;
+           vertical-align: middle;
+           margin-right: 5px;
+           box-shadow: 0px 3px 3px #bbb;
+        }
+        
+        
+        .countDownDigit div {
+           display: table-cell;        
+           vertical-align: middle;
+           text-align: center;
+           width: 20px; 
+           height: 30px;  
+           font-weight: bold;
+           color:  #eee;
+        }
+    
+    </style>
+    
+    <script src="./multisegment-countdown-timer.js" type="text/javascript"></script>
+    
+	<script type="text/javascript">
+
+        function CustomMultisegmentCountdownTimer (config) {
+            this.prototype = Object.create( MultisegmentCountdownTimer.prototype );
+            
+            MultisegmentCountdownTimer.call(this, config);
+            
+            this.createDigit = function (character) {
+                return '<div class="countDownDigit"><div>' + character + '</div></div>';
+            }
+            
+            this.createDigitBlocks = function (text) {
+                var len, i, html = '';
+                text = text + '';
+                for (i=0; i<text.length; i++) {
+                    html += this.createDigit(text.charAt(i));
+                }
+                return html;
+            }
+            
+            this.prefixPad = function (text, toLen, character) {
+                while (text.length < toLen) {
+                    text = character + text;
+                }
+                return text;
+            }
+            
+            this.clearCountdown = function () {
+                document.getElementById(this.countdownConfig.elementId).innerHTML = '';
+                document.getElementById(this.countdownConfig.elementId).attr('display','none');
+            };
+            
+            this.drawCountdown = function ( days, hours, minutes, seconds, segmentId ) {
+                var labels = this.countdownConfig.labels;
+                
+                daysStr = this.prefixPad(days + '', 3, '0');
+                hoursStr = this.prefixPad(hours + '', 2, '0');
+                minutesStr = this.prefixPad(minutes + '', 2, '0');
+                
+                document.getElementById(this.countdownConfig.elementId).innerHTML =  
+                   this.createDigitBlocks (daysStr) + '&nbsp;&nbsp;&nbsp;' +
+                   this.createDigitBlocks (hoursStr) + '&nbsp;&nbsp;&nbsp;' +
+                   this.createDigitBlocks (minutesStr);                   
+            }
+            
+        };
+        
+        document.addEventListener("DOMContentLoaded", function(event) { 	
+			var config = {
+				hideAfterFinalTarget: true,
+				postTargetAction: function () {
+				   console.log('My stage X');
+				},
+				segments: [{
+				   display: true,
+				   targetDate: '2016-01-26T18:38:00-05:00',
+				   initAction: function () {
+					   console.log('My stage A');
+					   
+					   document.getElementById('countdown-button').innerHTML =
+					   '<p id="timer-button" class="fr">' +
+                       '  <a href="/2016/signup/">' +
+                       '    <span class="panel-button fr">' +
+                       '       <span class="star">★</span> Sign up Now <span class="star">★</span>' +
+                       '    </span>' +
+                       '  </a>' +
+                       '</p>';
+				   }
+				 }, {
+				   display: true,
+				   targetDate: '2016-01-26T18:52:30-05:00',
+				   initAction: function () {
+					   console.log('My stage B');
+				   }
+				 }
+				],
+// 				labels: {
+// 				   days: 'Days',
+// 				   hours: 'hours',
+// 				   minutes: 'minutes',
+// 				   seconds: 'seconds'
+// 				}
+				labels: {
+				   days: 'jours',
+				   hours: 'heures',
+				   minutes: 'minutes',
+				   seconds: 'secondes'
+				},
+				elementId: 'countdown',
+				refreshInterval: 1000
+			};
+			
+	        //var countDown = new MultisegmentCountdownTimer(config);
+	    
+	        countDown = new CustomMultisegmentCountdownTimer(config);
+	    
+	    });
+	</script>
+
+</head>
+
+<body>
+
+<div id="countdown-box">
+<div id="countdown"></div>
+<div id="countdown-button"></div>
+</div>
+</body>
+
+</html>
+   
