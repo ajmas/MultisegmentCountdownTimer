@@ -1,27 +1,44 @@
-<html>
+﻿<!doctype html>
+<html lang="en">
 <head>
 
+    <title>Multi Segment Countdown Timer</title>
+    <meta charset="UTF-8" />
+    
     <style type="text/css">
     
        #countdown-box {
-           width: 300px;
+           width: 350px;
            text-align: center;
            display: block;
        }
        
        #countdown {
            margin: 0 auto;    
-           display: block
+           display: block;
            text-align: center;
-           width: 200px;
+           width: 300px;
        }
        
-       .countDownDigit {
+       .digitsGroup {
+           display: inline-block;
+           font-family: sans-serif;
+       }    
+       
+       .digitsGroup .label {
+           font-size: 80%;
+       }
+       
+       .countdownDigit.last {
+           margin-right: 0px;
+       }       
+               
+       .countdownDigit {
            display: inline-block;
            width: 20px; 
            height: 30px;
            color: white; 
-           background: black;
+           background: #222;
            text-align: center;
            font-family: sans-serif;
            border-radius: 5px;
@@ -30,38 +47,76 @@
            box-shadow: 0px 3px 3px #bbb;
         }
         
-        
-        .countDownDigit div {
+        .countdownDigit div {
            display: table-cell;        
            vertical-align: middle;
            text-align: center;
            width: 20px; 
            height: 30px;  
            font-weight: bold;
-           color:  #eee;
+      
         }
-    
+
+        #countdown-button p {    
+			padding: 8px 8px 2px 8px;
+			border-bottom-width: 3px;
+			border-bottom-style: solid;
+			background-color: #c33;
+			border-bottom-color: #911;
+			font-size: 120%;
+			font-weight: bold;
+			padding: 12px 12px 5px 12px;
+			background-color: #ffdb00;
+			color: #be6428;
+			border-bottom-color: #fa8240;
+		    font-size: 90%;
+		}
+		
+		#countdown-button a {
+			font-family:sans-serif;
+		    text-decoration: none;	
+			color: #be6428;		    	
+		}
+				
+		#countdown-button p:hover a {
+            background-color: red;
+			color: white;
+		}
+						
+		#countdown-button p:hover {
+            background-color: red;
+			color: white;
+		}
     </style>
     
     <script src="./multisegment-countdown-timer.js" type="text/javascript"></script>
     
 	<script type="text/javascript">
 
+
+        // Create a custom countdown timer, extending the MultisegmentCountdownTimer
+
         function CustomMultisegmentCountdownTimer (config) {
+            
             this.prototype = Object.create( MultisegmentCountdownTimer.prototype );
-            
+                    
             MultisegmentCountdownTimer.call(this, config);
-            
-            this.createDigit = function (character) {
-                return '<div class="countDownDigit"><div>' + character + '</div></div>';
+    
+            this.createDigit = function (character, cssClasses) {
+                cssClasses = (cssClasses?cssClasses:'');
+                return '<div class="countdownDigit ' + cssClasses + '"><div>' + character + '</div></div>';
             }
             
-            this.createDigitBlocks = function (text) {
-                var len, i, html = '';
+            this.createDigitBlocks = function (text, label) {
+                var len, i, html = '<div class="digitsGroup" >', cssClasses='';
                 text = text + '';
                 for (i=0; i<text.length; i++) {
-                    html += this.createDigit(text.charAt(i));
+                    if (i == text.length -1 ) {
+                        cssClasses = 'last';
+                    }
+                    html += this.createDigit(text.charAt(i), cssClasses);
                 }
+                html += '<div class="label">' + label + '</div></div>';
                 return html;
             }
             
@@ -72,9 +127,8 @@
                 return text;
             }
             
-            this.clearCountdown = function () {
-                document.getElementById(this.countdownConfig.elementId).innerHTML = '';
-                document.getElementById(this.countdownConfig.elementId).attr('display','none');
+            this.prototype.clearCountdown = function () {
+                document.getElementById('countdown-box').innerHTML = '';
             };
             
             this.drawCountdown = function ( days, hours, minutes, seconds, segmentId ) {
@@ -84,15 +138,30 @@
                 hoursStr = this.prefixPad(hours + '', 2, '0');
                 minutesStr = this.prefixPad(minutes + '', 2, '0');
                 
+                // Note while you can do seconds, consider that this increases the CPU load
+                secondsStr = this.prefixPad(seconds + '', 2, '0');
+                                
                 document.getElementById(this.countdownConfig.elementId).innerHTML =  
-                   this.createDigitBlocks (daysStr) + '&nbsp;&nbsp;&nbsp;' +
-                   this.createDigitBlocks (hoursStr) + '&nbsp;&nbsp;&nbsp;' +
-                   this.createDigitBlocks (minutesStr);                   
+                   this.createDigitBlocks (daysStr, labels['days']) + '&nbsp;&nbsp;&nbsp;' +
+                   this.createDigitBlocks (hoursStr, labels['hours']) + '&nbsp;&nbsp;&nbsp;' +
+                   this.createDigitBlocks (minutesStr, labels['minutes']) + '&nbsp;&nbsp;&nbsp;' +
+                   this.createDigitBlocks (secondsStr, labels['seconds']);                   
             }
-            
         };
         
+        
+        // Wait until the document is loaded and the create the countdown timer
+        
         document.addEventListener("DOMContentLoaded", function(event) { 	
+        
+            var segment1Date = new Date();
+            segment1Date = new Date(segment1Date.getTime() + 1 * 60000)
+            segment1Date.toISOString();
+            
+            var segment2Date = new Date();
+            segment2Date = new Date(segment2Date.getTime() + 2 * 60000)
+            segment2Date.toISOString();
+            
 			var config = {
 				hideAfterFinalTarget: true,
 				postTargetAction: function () {
@@ -100,7 +169,8 @@
 				},
 				segments: [{
 				   display: true,
-				   targetDate: '2016-01-26T18:38:00-05:00',
+				   displayTargetDate: false,				   
+				   targetDate: segment1Date, //'2016-01-26T19:18:00-05:00',
 				   initAction: function () {
 					   console.log('My stage A');
 					   
@@ -108,46 +178,59 @@
 					   '<p id="timer-button" class="fr">' +
                        '  <a href="/2016/signup/">' +
                        '    <span class="panel-button fr">' +
-                       '       <span class="star">★</span> Sign up Now <span class="star">★</span>' +
+                       '       <span class="star">★</span>Early Sign up Now <span class="star">★</span>' +
                        '    </span>' +
                        '  </a>' +
                        '</p>';
 				   }
 				 }, {
 				   display: true,
-				   targetDate: '2016-01-26T18:52:30-05:00',
+				   displayTargetDate: true,
+				   targetDate: segment2Date, //'2016-01-26T21:52:30-05:00',
 				   initAction: function () {
 					   console.log('My stage B');
+					   
+					   document.getElementById('countdown-button').innerHTML =
+					   '<p id="timer-button" class="fr">' +
+                       '  <a href="/2016/signup/">' +
+                       '    <span class="panel-button fr">' +
+                       '       <span class="star">★</span>Regular Sign up Now <span class="star">★</span>' +
+                       '    </span>' +
+                       '  </a>' +
+                       '</p>';					   
 				   }
 				 }
 				],
-// 				labels: {
-// 				   days: 'Days',
-// 				   hours: 'hours',
-// 				   minutes: 'minutes',
-// 				   seconds: 'seconds'
-// 				}
 				labels: {
-				   days: 'jours',
-				   hours: 'heures',
+				   days: 'Days',
+				   hours: 'hours',
 				   minutes: 'minutes',
-				   seconds: 'secondes'
+				   seconds: 'seconds'
 				},
+// 				labels: {
+// 				   days: 'jours',
+// 				   hours: 'heures',
+// 				   minutes: 'minutes',
+// 				   seconds: 'secondes'
+// 				},
 				elementId: 'countdown',
-				refreshInterval: 1000
+				refreshInterval: 1000//60000
 			};
 			
 	        //var countDown = new MultisegmentCountdownTimer(config);
 	    
 	        countDown = new CustomMultisegmentCountdownTimer(config);
-	    
+	        countDown.start();
 	    });
 	</script>
 
 </head>
 
 <body>
-
+    <h1>Multi Segment Countdown Timer</h1>
+<p>The demo adds two segments, 1 minute and 2 minutes from current time. The first
+segment displays the 'early sign up' button and the second the 'regular sign up' button.
+</p>
 <div id="countdown-box">
 <div id="countdown"></div>
 <div id="countdown-button"></div>

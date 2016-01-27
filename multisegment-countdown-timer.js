@@ -20,6 +20,7 @@
 //
 // Target Javascript: ECMAScript 5
 // Project home: http://github.com/ajmas/MultisegmentCountdownTimer
+//
 function MultisegmentCountdownTimer(config) {
 
     this.countdownConfig = {}
@@ -78,7 +79,29 @@ function MultisegmentCountdownTimer(config) {
         }
 
         if (this.currentSegmentIdx !== undefined) {
-            var targetTime = Date.parse(this.countdownConfig.segments[this.currentSegmentIdx].targetDate);
+
+            targetDateSegmentIdx = this.currentSegmentIdx;
+
+            // Only if displayTargetDate is explicitly true, otherwise treat as 'true'
+            if (!this.countdownConfig.segments[targetDateSegmentIdx].displayTargetDate) {
+
+                segments = this.countdownConfig.segments;
+                for (i = targetDateSegmentIdx; i < segments.length; i++) {
+                    if (this.countdownConfig.segments[i].displayTargetDate) {
+                         targetDateSegmentIdx = i;
+                         break;
+                    }
+                }
+
+                // For now, ignore whatever value is the final segment and use that
+                // TODO consider if this is best behaviour
+                if (targetDateSegmentIdx === this.currentSegmentIdx) {
+                    targetDateSegmentIdx = this.countdownConfig.segments.length - 1;
+                }
+
+            }
+
+            var targetTime = Date.parse(this.countdownConfig.segments[targetDateSegmentIdx].targetDate);
             timeDiff = targetTime - currentDate.getTime();
 
             // Remove the milliseconds
@@ -97,6 +120,7 @@ function MultisegmentCountdownTimer(config) {
 
             this.drawCountdown(days, hours, minutes, seconds, this.currentSegmentIdx);
 
+
             scope = this;
             setTimeout(function() {
                 scope.updateCountdown();
@@ -107,11 +131,13 @@ function MultisegmentCountdownTimer(config) {
         }
     }
 
+    this.start = function () {
+        this.updateCountdown();
+    }
 
     this.countdownConfig = config;
 
     if (!this.countdownConfig.refreshInterval) {
         this.countdownConfig.refreshInterval = this.defaultRefreshInterval;
     }
-    this.updateCountdown();
 }
